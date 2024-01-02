@@ -1,9 +1,23 @@
 ThisBuild / dynverSeparator := "-"
 
+lazy val publishSettings: Seq[Setting[_]] = {
+  (sys.env.get("ARTIFACTORY_URL"), sys.env.get("ARTIFACTORY_CREDENTIALS")) match {
+    case (Some(artifactoryUrl), Some(artifactoryCredentials)) =>
+      println(s"Publishing set to $artifactoryUrl with credentials from $artifactoryCredentials")
+      Seq(
+        publishTo := Some("Custom Artifactory" at artifactoryUrl),
+        credentials += Credentials(Path(artifactoryCredentials).asFile)
+      )
+    case _ =>
+      Seq.empty
+  }
+}
+
 lazy val flink =
   Project(id = "cloudflow-flink", base = file("cloudflow-flink"))
     .enablePlugins(ScalafmtPlugin)
     .settings(Dependencies.flinkStreamlet)
+    .settings(publishSettings)
     .settings(
       name := "contrib-flink",
       scalaVersion := Dependencies.Scala212,
@@ -16,6 +30,7 @@ lazy val flinkTestkit =
   Project(id = "cloudflow-flink-testkit", base = file("cloudflow-flink-testkit"))
     .enablePlugins(ScalafmtPlugin)
     .dependsOn(flink)
+    .settings(publishSettings)
     .settings(
       name := "contrib-flink-testkit",
       scalaVersion := Dependencies.Scala212,
@@ -27,6 +42,7 @@ lazy val flinkTests =
     .enablePlugins(JavaFormatterPlugin, ScalafmtPlugin)
     .dependsOn(flinkTestkit)
     .settings(Dependencies.flinkTests)
+    .settings(publishSettings)
     .settings(
       name := "contrib-flink-tests",
       scalaVersion := Dependencies.Scala212,
@@ -39,6 +55,7 @@ lazy val flinkSbtPlugin =
   Project(id = "cloudflow-sbt-flink", base = file("cloudflow-sbt-flink"))
     .settings(name := "sbt-cloudflow-contrib-flink")
     .enablePlugins(BuildInfoPlugin, ScalafmtPlugin, SbtPlugin)
+    .settings(publishSettings)
     .settings(
       name := "contrib-sbt-flink",
       scalaVersion := Dependencies.Scala212,
@@ -65,6 +82,7 @@ lazy val spark =
   Project(id = "cloudflow-spark", base = file("cloudflow-spark"))
     .enablePlugins(ScalafmtPlugin)
     .settings(Dependencies.sparkStreamlet)
+    .settings(publishSettings)
     .settings(
       name := "contrib-spark",
       scalaVersion := Dependencies.Scala212,
@@ -77,6 +95,7 @@ lazy val sparkTestkit =
     .dependsOn(spark)
     .enablePlugins(ScalafmtPlugin)
     .settings(Dependencies.sparkTestkit)
+    .settings(publishSettings)
     .settings(
       name := "contrib-spark-testkit",
       scalaVersion := Dependencies.Scala212,
@@ -88,6 +107,7 @@ lazy val sparkTests =
     .dependsOn(sparkTestkit)
     .enablePlugins(ScalafmtPlugin)
     .settings(Dependencies.sparkTests)
+    .settings(publishSettings)
     .settings(
       name := "contrib-spark-tests",
       scalaVersion := Dependencies.Scala212,
@@ -100,6 +120,7 @@ lazy val sparkSbtPlugin =
   Project(id = "cloudflow-sbt-spark", base = file("cloudflow-sbt-spark"))
     .settings(name := "sbt-cloudflow-contrib-spark")
     .enablePlugins(BuildInfoPlugin, ScalafmtPlugin, SbtPlugin)
+    .settings(publishSettings)
     .settings(
       name := "contrib-sbt-spark",
       scalaVersion := Dependencies.Scala212,
